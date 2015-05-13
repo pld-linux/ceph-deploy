@@ -1,0 +1,790 @@
+From 73a760805b798f9df406402451578d069b95a794 Mon Sep 17 00:00:00 2001
+From: Joe Handzik <joseph.t.handzik@hp.com>
+Date: Tue, 7 Apr 2015 15:03:10 -0500
+Subject: [PATCH 01/14] Updating the url used to clone the remoto repository
+
+---
+ vendor.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vendor.py b/vendor.py
+index e1c714d..506e87c 100644
+--- a/vendor.py
++++ b/vendor.py
+@@ -64,7 +64,7 @@ def vendor_library(name, version, cmd=None):
+             run(['rm', '-rf', vendor_dest])
+ 
+     if not path.exists(vendor_dest):
+-        run(['git', 'clone', 'git://ceph.com/%s' % name])
++        run(['git', 'clone', 'https://github.com/alfredodeza/%s.git' % name])
+         os.chdir(vendor_src)
+         run(['git', 'checkout', version])
+         if cmd:
+-- 
+2.3.0
+
+
+From 55d72f4b57cb6da0bd6d4c6207ae0a138d509be7 Mon Sep 17 00:00:00 2001
+From: Joe Handzik <joseph.t.handzik@hp.com>
+Date: Wed, 8 Apr 2015 09:53:33 -0500
+Subject: [PATCH 02/14] Updating github url to point to the ceph fork of remoto
+
+---
+ vendor.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vendor.py b/vendor.py
+index 506e87c..5a88856 100644
+--- a/vendor.py
++++ b/vendor.py
+@@ -64,7 +64,7 @@ def vendor_library(name, version, cmd=None):
+             run(['rm', '-rf', vendor_dest])
+ 
+     if not path.exists(vendor_dest):
+-        run(['git', 'clone', 'https://github.com/alfredodeza/%s.git' % name])
++        run(['git', 'clone', 'https://github.com/ceph/%s.git' % name])
+         os.chdir(vendor_src)
+         run(['git', 'checkout', version])
+         if cmd:
+-- 
+2.3.0
+
+
+From 4fce039e050f4657f488371f6da84e724b15b60c Mon Sep 17 00:00:00 2001
+From: Joe Handzik <joseph.t.handzik@hp.com>
+Date: Thu, 9 Apr 2015 17:05:35 -0500
+Subject: [PATCH 03/14] Update the run function to cascade the called process's
+ return code back to its caller
+
+---
+ vendor.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/vendor.py b/vendor.py
+index 5a88856..f56f1c3 100644
+--- a/vendor.py
++++ b/vendor.py
+@@ -31,6 +31,8 @@ def run(cmd):
+     if result.wait():
+         print_error(result.stdout.readlines(), result.stderr.readlines())
+ 
++    return result.returncode
++
+ 
+ def print_error(stdout, stderr):
+     print '*'*80
+-- 
+2.3.0
+
+
+From dbf5897cf2762b6d3c19f87490822425e3a11d09 Mon Sep 17 00:00:00 2001
+From: Joe Handzik <joseph.t.handzik@hp.com>
+Date: Thu, 9 Apr 2015 17:18:28 -0500
+Subject: [PATCH 04/14] Try the ceph.com mirror first. If that fails, retry
+ with the github url and the https protocol.
+
+---
+ vendor.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/vendor.py b/vendor.py
+index f56f1c3..ef3c52c 100644
+--- a/vendor.py
++++ b/vendor.py
+@@ -66,7 +66,10 @@ def vendor_library(name, version, cmd=None):
+             run(['rm', '-rf', vendor_dest])
+ 
+     if not path.exists(vendor_dest):
+-        run(['git', 'clone', 'https://github.com/ceph/%s.git' % name])
++        rc = run(['git', 'clone', 'git://ceph.com/%s' % name])
++        if (rc):
++            print "%s: git clone failed using ceph.com url with rc %s, trying github.com" % (path.basename(__file__), rc)
++            run(['git', 'clone', 'https://github.com/ceph/%s.git' % name])
+         os.chdir(vendor_src)
+         run(['git', 'checkout', version])
+         if cmd:
+-- 
+2.3.0
+
+
+From 95dce45746a7044b538c03c01631a7e1f0af9bc5 Mon Sep 17 00:00:00 2001
+From: Joe Handzik <joseph.t.handzik@hp.com>
+Date: Fri, 10 Apr 2015 10:10:37 -0500
+Subject: [PATCH 05/14] remove unnecessary parentheses from an if statement
+
+---
+ vendor.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vendor.py b/vendor.py
+index ef3c52c..8d6ac6a 100644
+--- a/vendor.py
++++ b/vendor.py
+@@ -67,7 +67,7 @@ def vendor_library(name, version, cmd=None):
+ 
+     if not path.exists(vendor_dest):
+         rc = run(['git', 'clone', 'git://ceph.com/%s' % name])
+-        if (rc):
++        if rc:
+             print "%s: git clone failed using ceph.com url with rc %s, trying github.com" % (path.basename(__file__), rc)
+             run(['git', 'clone', 'https://github.com/ceph/%s.git' % name])
+         os.chdir(vendor_src)
+-- 
+2.3.0
+
+
+From c809d07b8813b0598a6dc6a14ae289be47b4a30f Mon Sep 17 00:00:00 2001
+From: Ken Dreyer <kdreyer@redhat.com>
+Date: Fri, 10 Apr 2015 09:18:17 -0600
+Subject: [PATCH 06/14] doc: add CVE-2015-3010 to changelog
+
+One of the changes in ceph-deploy 1.5.23 is tracked as CVE-2015-3010.
+Document this in the changelog.
+
+Signed-off-by: Ken Dreyer <kdreyer@redhat.com>
+---
+ docs/source/changelog.rst | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/docs/source/changelog.rst b/docs/source/changelog.rst
+index 5363e3b..cb67522 100644
+--- a/docs/source/changelog.rst
++++ b/docs/source/changelog.rst
+@@ -12,8 +12,8 @@ Changelog
+ * Add ``rgw`` command to easily create rgw instances.
+ * Automatically install the radosgw package.
+ * Remove unimplemented subcommands from CLI and help.
+-* Fix an issue where keyring permissions were world readable
+-  (thanks Owen Synge).
++* **CVE-2015-3010**: Fix an issue where keyring permissions were
++  world readable (thanks Owen Synge).
+ * Fix an issue preventing all but the first host given to
+   ``install --repo`` from being used.
+ 
+-- 
+2.3.0
+
+
+From a3940704d7c91e4eabb0d579087b10629163a3d3 Mon Sep 17 00:00:00 2001
+From: Alfredo Deza <adeza@redhat.com>
+Date: Wed, 22 Apr 2015 09:31:32 -0400
+Subject: [PATCH 07/14] update the changelog
+
+Signed-off-by: Alfredo Deza <adeza@redhat.com>
+---
+ docs/source/changelog.rst | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/docs/source/changelog.rst b/docs/source/changelog.rst
+index cb67522..9fa009d 100644
+--- a/docs/source/changelog.rst
++++ b/docs/source/changelog.rst
+@@ -4,6 +4,13 @@ Changelog
+ 1.5
+ ---
+ 
++1.5.24
++^^^^^^
++**UNRELEASED**
++
++* Use version 0.0.25 of `remoto` that fixes an issue where output would be cut
++  (https://github.com/alfredodeza/remoto/issues/15).
++
+ 1.5.23
+ ^^^^^^
+ 07-Apr-2015
+-- 
+2.3.0
+
+
+From 1f0cd52e9bec1951a476cc3d12b5df4abf715a93 Mon Sep 17 00:00:00 2001
+From: Alfredo Deza <adeza@redhat.com>
+Date: Wed, 22 Apr 2015 09:31:57 -0400
+Subject: [PATCH 08/14] use the new 0.0.25 version of remoto
+
+Signed-off-by: Alfredo Deza <adeza@redhat.com>
+---
+ setup.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/setup.py b/setup.py
+index faa4e16..81fcecd 100644
+--- a/setup.py
++++ b/setup.py
+@@ -24,7 +24,7 @@ if os.environ.get('CEPH_DEPLOY_NO_VENDOR'):
+     clean_vendor('remoto')
+ else:
+     vendorize([
+-        ('remoto', '0.0.23', ['python', 'vendor.py']),
++        ('remoto', '0.0.25', ['python', 'vendor.py']),
+     ])
+ 
+ 
+-- 
+2.3.0
+
+
+From 4bc9e271d5d5d7715dfd36d0142e8aba2911138e Mon Sep 17 00:00:00 2001
+From: Travis Rhoden <trhoden@redhat.com>
+Date: Thu, 7 May 2015 17:43:15 -0400
+Subject: [PATCH 09/14] Add safe_makedirs function
+
+safe_makedirs will recursively create paths, just like mkdirs -p
+
+The "safe" part is that it wont error/except if any of the paths already
+exist.
+
+Signed-off-by: Travis Rhoden <trhoden@redhat.com>
+---
+ ceph_deploy/hosts/remotes.py | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/ceph_deploy/hosts/remotes.py b/ceph_deploy/hosts/remotes.py
+index 88812fc..6c8e63a 100644
+--- a/ceph_deploy/hosts/remotes.py
++++ b/ceph_deploy/hosts/remotes.py
+@@ -296,6 +296,17 @@ def safe_mkdir(path):
+             raise
+ 
+ 
++def safe_makedirs(path):
++    """ create path recursively if it doesn't exist """
++    try:
++        os.makedirs(path)
++    except OSError, e:
++        if e.errno == errno.EEXIST:
++            pass
++        else:
++            raise
++
++
+ def zeroing(dev):
+     """ zeroing last few blocks of device """
+     # this kills the crab
+-- 
+2.3.0
+
+
+From 2a0b467bc4f520865a520cf634043c848f1a5989 Mon Sep 17 00:00:00 2001
+From: Travis Rhoden <trhoden@redhat.com>
+Date: Thu, 7 May 2015 17:44:37 -0400
+Subject: [PATCH 10/14] Recursively create /var/lib/ceph/radosgw/... path
+
+Previously we would fail if /var/lib/ceph/radosgw didn't already
+exist.  Go ahead and make that directory if needed.
+
+Signed-off-by: Travis Rhoden <trhoden@redhat.com>
+---
+ ceph_deploy/rgw.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ceph_deploy/rgw.py b/ceph_deploy/rgw.py
+index 7364efc..f4e4b1d 100644
+--- a/ceph_deploy/rgw.py
++++ b/ceph_deploy/rgw.py
+@@ -34,7 +34,7 @@ def create_rgw(distro, name, cluster, init):
+         name=name
+         )
+ 
+-    conn.remote_module.safe_mkdir(path)
++    conn.remote_module.safe_makedirs(path)
+ 
+     bootstrap_keyring = '/var/lib/ceph/bootstrap-rgw/{cluster}.keyring'.format(
+         cluster=cluster
+-- 
+2.3.0
+
+
+From ff32436139d17074cbc58da0d553ffb2c5f386a1 Mon Sep 17 00:00:00 2001
+From: Jacek Konieczny <j.konieczny@eggsoft.pl>
+Date: Tue, 12 May 2015 15:09:52 +0200
+Subject: [PATCH 11/14] Basic systemd support
+
+Do not assume systemd is just another variant of sysvinit.
+
+No point in supporting sysvinit in PLD, the init scripts are
+overcomplicated.
+---
+ ceph_deploy/install.py     |  2 +-
+ ceph_deploy/mds.py         | 10 ++++++++++
+ ceph_deploy/mon.py         |  9 +++++++--
+ ceph_deploy/rgw.py         | 10 ++++++++++
+ ceph_deploy/util/system.py | 26 ++++++++++++++++++--------
+ 5 files changed, 46 insertions(+), 11 deletions(-)
+
+diff --git a/ceph_deploy/install.py b/ceph_deploy/install.py
+index 8665bd0..ca06721 100644
+--- a/ceph_deploy/install.py
++++ b/ceph_deploy/install.py
+@@ -69,7 +69,7 @@ def install(args):
+             distro.codename
+         )
+ 
+-        if distro.init == 'sysvinit' and args.cluster != 'ceph':
++        if distro.init in ('sysvinit', 'systemd') and args.cluster != 'ceph':
+             LOG.error('refusing to install on host: %s, with custom cluster name: %s' % (
+                     hostname,
+                     args.cluster,
+diff --git a/ceph_deploy/mds.py b/ceph_deploy/mds.py
+index 07621d2..01c9d2a 100644
+--- a/ceph_deploy/mds.py
++++ b/ceph_deploy/mds.py
+@@ -97,6 +97,16 @@ def create_mds(distro, name, cluster, init):
+             ],
+             timeout=7
+         )
++    if init == 'systemd':
++        remoto.process.run(
++            conn,
++            [
++                'systemctl',
++                'start',
++                'ceph-mds@{name}.service'.format(name=name),
++            ],
++            timeout=7
++        )
+     elif init == 'sysvinit':
+         remoto.process.run(
+             conn,
+diff --git a/ceph_deploy/mon.py b/ceph_deploy/mon.py
+index 9b20944..d70cf82 100644
+--- a/ceph_deploy/mon.py
++++ b/ceph_deploy/mon.py
+@@ -331,7 +331,12 @@ def destroy_mon(conn, cluster, hostname):
+                 'cluster={cluster}'.format(cluster=cluster),
+                 'id={hostname}'.format(hostname=hostname),
+             ]
+-
++        elif conn.remote_module.path_exists(os.path.join(path, 'systemd')):
++            status_args = [
++                'systemctl',
++                'status',
++                'ceph-mon@{hostname}.service'.format(hostname=hostname),
++            ]
+         elif conn.remote_module.path_exists(os.path.join(path, 'sysvinit')):
+             status_args = [
+                 'service',
+@@ -569,7 +574,7 @@ def is_running(conn, args):
+         args
+     )
+     result_string = ' '.join(stdout)
+-    for run_check in [': running', ' start/running']:
++    for run_check in [': running', ' start/running', 'active (running)']:
+         if run_check in result_string:
+             return True
+     return False
+diff --git a/ceph_deploy/rgw.py b/ceph_deploy/rgw.py
+index f4e4b1d..4462ba0 100644
+--- a/ceph_deploy/rgw.py
++++ b/ceph_deploy/rgw.py
+@@ -95,6 +95,16 @@ def create_rgw(distro, name, cluster, init):
+             ],
+             timeout=7
+         )
++    elif init == 'systemd':
++        remoto.process.run(
++            conn,
++            [
++                'systemctl',
++                'start',
++                'ceph-radosgw@{name}'.format(name=name),
++            ],
++            timeout=7
++        )
+     elif init == 'sysvinit':
+         remoto.process.run(
+             conn,
+diff --git a/ceph_deploy/util/system.py b/ceph_deploy/util/system.py
+index 7665dff..f8e1c81 100644
+--- a/ceph_deploy/util/system.py
++++ b/ceph_deploy/util/system.py
+@@ -39,14 +39,24 @@ def enable_service(conn, service='ceph'):
+     This function does not do any kind of detection.
+     """
+     if is_systemd(conn):
+-        remoto.process.run(
+-            conn,
+-            [
+-                'systemctl',
+-                'enable',
+-                'ceph',
+-            ]
+-        )
++        if conn.remote_module.path_exists('/lib/systemd/system/ceph.target'):
++            remoto.process.run(
++                conn,
++                [
++                    'systemctl',
++                    'enable',
++                    'ceph.target',
++                ]
++            )
++        else:
++            remoto.process.run(
++                conn,
++                [
++                    'systemctl',
++                    'enable',
++                    'ceph',
++                ]
++            )
+     else:
+         remoto.process.run(
+             conn,
+-- 
+2.3.0
+
+
+From c57a04651ea4508b63f5eff536f1be66080b8864 Mon Sep 17 00:00:00 2001
+From: Jacek Konieczny <j.konieczny@eggsoft.pl>
+Date: Tue, 12 May 2015 15:11:19 +0200
+Subject: [PATCH 12/14] PLD Linux support (systemd only)
+
+Install packages with poldek, control services with systemctl.
+---
+ ceph_deploy/hosts/__init__.py         |  5 ++--
+ ceph_deploy/hosts/pld/__init__.py     | 19 ++++++++++++++
+ ceph_deploy/hosts/pld/install.py      | 27 ++++++++++++++++++++
+ ceph_deploy/hosts/pld/mon/__init__.py |  2 ++
+ ceph_deploy/hosts/pld/mon/create.py   | 35 ++++++++++++++++++++++++++
+ ceph_deploy/hosts/pld/pkg.py          | 15 +++++++++++
+ ceph_deploy/hosts/pld/uninstall.py    | 15 +++++++++++
+ ceph_deploy/util/pkg_managers.py      | 47 +++++++++++++++++++++++++++++++++++
+ 8 files changed, 163 insertions(+), 2 deletions(-)
+ create mode 100644 ceph_deploy/hosts/pld/__init__.py
+ create mode 100644 ceph_deploy/hosts/pld/install.py
+ create mode 100644 ceph_deploy/hosts/pld/mon/__init__.py
+ create mode 100644 ceph_deploy/hosts/pld/mon/create.py
+ create mode 100644 ceph_deploy/hosts/pld/pkg.py
+ create mode 100644 ceph_deploy/hosts/pld/uninstall.py
+
+diff --git a/ceph_deploy/hosts/__init__.py b/ceph_deploy/hosts/__init__.py
+index a662304..0215348 100644
+--- a/ceph_deploy/hosts/__init__.py
++++ b/ceph_deploy/hosts/__init__.py
+@@ -6,7 +6,7 @@ on the type of distribution/version we are dealing with.
+ """
+ import logging
+ from ceph_deploy import exc
+-from ceph_deploy.hosts import debian, centos, fedora, suse, remotes, rhel
++from ceph_deploy.hosts import debian, centos, fedora, suse, remotes, rhel, pld
+ from ceph_deploy.connection import get_connection
+ 
+ logger = logging.getLogger()
+@@ -60,7 +60,7 @@ def get(hostname,
+     module.normalized_name = _normalized_distro_name(distro_name)
+     module.normalized_release = _normalized_release(release)
+     module.distro = module.normalized_name
+-    module.is_el = module.normalized_name in ['redhat', 'centos', 'fedora', 'scientific']
++    module.is_el = module.normalized_name in ['redhat', 'centos', 'fedora', 'scientific', 'pld']
+     module.release = release
+     module.codename = codename
+     module.conn = conn
+@@ -82,6 +82,7 @@ def _get_distro(distro, fallback=None, use_rhceph=False):
+         'redhat': centos,
+         'fedora': fedora,
+         'suse': suse,
++        'pld': pld,
+         }
+ 
+     if distro == 'redhat' and use_rhceph:
+diff --git a/ceph_deploy/hosts/pld/__init__.py b/ceph_deploy/hosts/pld/__init__.py
+new file mode 100644
+index 0000000..bff6a2a
+--- /dev/null
++++ b/ceph_deploy/hosts/pld/__init__.py
+@@ -0,0 +1,19 @@
++import mon  # noqa
++import pkg  # noqa
++from install import install # noqa
++from uninstall import uninstall  # noqa
++
++# Allow to set some information about this distro
++#
++
++distro = None
++release = None
++codename = None
++
++def choose_init():
++    """
++    Select a init system
++
++    Returns the name of a init system (upstart, sysvinit ...).
++    """
++    return 'systemd'
+diff --git a/ceph_deploy/hosts/pld/install.py b/ceph_deploy/hosts/pld/install.py
+new file mode 100644
+index 0000000..610f326
+--- /dev/null
++++ b/ceph_deploy/hosts/pld/install.py
+@@ -0,0 +1,27 @@
++import sys
++
++from ceph_deploy.lib import remoto
++
++def install(distro, version_kind, version, adjust_repos):
++    logger = distro.conn.logger
++    release = distro.release
++    machine = distro.machine_type
++
++    if version_kind not in ['stable', 'testing']:
++        logger.error("Only 'stable' and 'testing' supported for PLD")
++        sys.exit(1)
++
++    if version_kind == 'testing':
++        sources = ['-n', 'th-test', '-n', 'th-ready', '-n', 'th']
++    else:
++        sources = ['-n', 'th']
++
++    remoto.process.run(
++        distro.conn,
++        [ 'poldek' ] + sources + [
++            '--cmd',
++            'install',
++            'ceph',
++            'ceph-radosgw',
++        ],
++    )
+diff --git a/ceph_deploy/hosts/pld/mon/__init__.py b/ceph_deploy/hosts/pld/mon/__init__.py
+new file mode 100644
+index 0000000..936d5d8
+--- /dev/null
++++ b/ceph_deploy/hosts/pld/mon/__init__.py
+@@ -0,0 +1,2 @@
++from ceph_deploy.hosts.common import mon_add as add  # noqa
++from create import create  # noqa
+diff --git a/ceph_deploy/hosts/pld/mon/create.py b/ceph_deploy/hosts/pld/mon/create.py
+new file mode 100644
+index 0000000..19c08a8
+--- /dev/null
++++ b/ceph_deploy/hosts/pld/mon/create.py
+@@ -0,0 +1,35 @@
++from ceph_deploy.hosts import common
++from ceph_deploy.lib import remoto
++
++
++def create(distro, args, monitor_keyring):
++    hostname = distro.conn.remote_module.shortname()
++    common.mon_create(distro, args, monitor_keyring, hostname)
++
++    remoto.process.run(
++        distro.conn,
++        [
++            'systemctl',
++            'enable',
++            'ceph-mon@{hostname}.service'.format(hostname=hostname)
++        ],
++        timeout=7,
++    )
++    remoto.process.run(
++        distro.conn,
++        [
++            'systemctl',
++            'start',
++            'ceph-mon@{hostname}.service'.format(hostname=hostname)
++        ],
++        timeout=7,
++    )
++    remoto.process.run(
++        distro.conn,
++        [
++            'ceph-create-keys',
++            '--cluster', args.cluster,
++            '-i', hostname,
++        ],
++        timeout=7,
++    )
+diff --git a/ceph_deploy/hosts/pld/pkg.py b/ceph_deploy/hosts/pld/pkg.py
+new file mode 100644
+index 0000000..64f1857
+--- /dev/null
++++ b/ceph_deploy/hosts/pld/pkg.py
+@@ -0,0 +1,15 @@
++from ceph_deploy.util import pkg_managers
++
++
++def install(distro, packages):
++    return pkg_managers.poldek(
++        distro.conn,
++        packages
++    )
++
++
++def remove(distro, packages):
++    return pkg_managers.poldek_remove(
++        distro.conn,
++        packages
++    )
+diff --git a/ceph_deploy/hosts/pld/uninstall.py b/ceph_deploy/hosts/pld/uninstall.py
+new file mode 100644
+index 0000000..c047e57
+--- /dev/null
++++ b/ceph_deploy/hosts/pld/uninstall.py
+@@ -0,0 +1,15 @@
++from ceph_deploy.util import pkg_managers
++
++
++def uninstall(conn, purge=False):
++    packages = [
++        'ceph',
++        'ceph-common',
++        'radosgw',
++        ]
++
++    pkg_managers.poldek_remove(
++        conn,
++        packages,
++    )
++
+diff --git a/ceph_deploy/util/pkg_managers.py b/ceph_deploy/util/pkg_managers.py
+index 8985112..ac463c3 100644
+--- a/ceph_deploy/util/pkg_managers.py
++++ b/ceph_deploy/util/pkg_managers.py
+@@ -164,3 +164,50 @@ def zypper_remove(conn, packages, *a, **kw):
+         *a,
+         **kw
+     )
++
++def poldek(conn, packages, *a, **kw):
++    if isinstance(packages, str):
++        packages = [packages]
++    cmd = [
++        'poldek',
++        '--noask',
++        '--cmd',
++        'install',
++    ]
++    cmd.extend(packages)
++    return remoto.process.run(
++        conn,
++        cmd,
++        *a,
++        **kw
++    )
++
++
++def poldek_remove(conn, packages, *a, **kw):
++    if isinstance(packages, str):
++        packages = [packages]
++
++    cmd = [
++        'poldek',
++        '--noask',
++        'uninstall',
++    ]
++    cmd.extend(packages)
++
++    return remoto.process.run(
++        conn,
++        cmd,
++        *a,
++        **kw
++    )
++
++
++def poldek_update(conn):
++    cmd = [
++        'poldek',
++        '--upa',
++    ]
++    return remoto.process.run(
++        conn,
++        cmd,
++    )
+-- 
+2.3.0
+
+
+From dc6d218f03d8cfad9a8606dcb016e2e3a45b9a53 Mon Sep 17 00:00:00 2001
+From: Jacek Konieczny <j.konieczny@eggsoft.pl>
+Date: Wed, 13 May 2015 11:08:15 +0200
+Subject: [PATCH 13/14] pld: fix 'purge' action
+
+- properly remove the packages installed with 'install'
+- remove stale /etc/systemd/system/ceph.target.wants symlinks
+---
+ ceph_deploy/hosts/pld/uninstall.py | 10 ++++++----
+ ceph_deploy/util/pkg_managers.py   |  3 ++-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/ceph_deploy/hosts/pld/uninstall.py b/ceph_deploy/hosts/pld/uninstall.py
+index c047e57..c7a5ee5 100644
+--- a/ceph_deploy/hosts/pld/uninstall.py
++++ b/ceph_deploy/hosts/pld/uninstall.py
+@@ -1,15 +1,17 @@
+ from ceph_deploy.util import pkg_managers
+-
++from ceph_deploy.lib import remoto
+ 
+ def uninstall(conn, purge=False):
+     packages = [
+         'ceph',
+-        'ceph-common',
+-        'radosgw',
++        'ceph-radosgw',
+         ]
+ 
+     pkg_managers.poldek_remove(
+         conn,
+         packages,
+     )
+-
++    remoto.process.run(
++        conn,
++        ['sh', '-c', 'rm -f /etc/systemd/system/ceph.target.wants/* || :']
++    )
+diff --git a/ceph_deploy/util/pkg_managers.py b/ceph_deploy/util/pkg_managers.py
+index ac463c3..d7db533 100644
+--- a/ceph_deploy/util/pkg_managers.py
++++ b/ceph_deploy/util/pkg_managers.py
+@@ -190,7 +190,8 @@ def poldek_remove(conn, packages, *a, **kw):
+     cmd = [
+         'poldek',
+         '--noask',
+-        'uninstall',
++        '--cmd',
++        'uninstall'
+     ]
+     cmd.extend(packages)
+ 
+-- 
+2.3.0
+
+
+From bfd4cdafbf34fd34f777038ad8c2efa10e7bc32f Mon Sep 17 00:00:00 2001
+From: Jacek Konieczny <j.konieczny@eggsoft.pl>
+Date: Wed, 13 May 2015 13:18:22 +0200
+Subject: [PATCH 14/14] bootstrap script updated for PLD
+
+---
+ bootstrap | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/bootstrap b/bootstrap
+index 9b6fda8..c11f413 100755
+--- a/bootstrap
++++ b/bootstrap
+@@ -16,6 +16,19 @@ if command -v lsb_release >/dev/null 2>&1; then
+ 			exit 1
+ 	    fi
+ 	    ;;
++	PLD)
++	    for package in python-virtualenv; do
++		if ! rpm -q $package >/dev/null 2>&1; then
++                    # add a space after old values
++		    missing="${missing:+$missing }$package"
++		fi
++	    done
++	    if [ -n "$missing" ]; then
++			echo "$0: missing required packages, please install them:" 1>&2
++			echo "  poldek --cmd install $missing"
++			exit 1
++	    fi
++	    ;;
+     esac
+ 
+     case "$(lsb_release --id --short | awk '{print $1}')" in
+-- 
+2.3.0
+
