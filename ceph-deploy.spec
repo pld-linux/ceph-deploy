@@ -11,19 +11,22 @@ Source0:	https://github.com/ceph/ceph-deploy/archive/v%{version}/%{name}-%{versi
 Patch0:		%{name}-pld.patch
 URL:		https://github.com/ceph/ceph-deploy
 BuildRequires:	python-setuptools >= 7.0
-BuildRequires:	rpmbuild(macros) >= 1.219
 BuildRequires:	rpm-pythonprov
+BuildRequires:	rpmbuild(macros) >= 1.219
 Requires:	python-remoto
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-ceph-deploy is a way to deploy Ceph relying on just SSH access to the servers, sudo, and some Python. It runs fully on your workstation, requiring no servers, databases, or anything like that.
+ceph-deploy is a way to deploy Ceph relying on just SSH access to the
+servers, sudo, and some Python. It runs fully on your workstation,
+requiring no servers, databases, or anything like that.
 
-If you set up and tear down Ceph clusters a lot, and want minimal extra bureaucracy, this is for you.
+If you set up and tear down Ceph clusters a lot, and want minimal
+extra bureaucracy, this is for you.
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q
 %patch0 -p1
 
 %build
