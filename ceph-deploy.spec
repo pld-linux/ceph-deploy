@@ -35,15 +35,13 @@ extra bureaucracy, this is for you.
 
 %build
 export CEPH_DEPLOY_NO_VENDOR=1
-%{__python} setup.py build
+%py_build
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
 export CEPH_DEPLOY_NO_VENDOR=1
-%{__python} setup.py install \
-	--optimize=2 \
-	--root=$RPM_BUILD_ROOT
+%py_install
 
 # no %%py_postclean !
 # ceph-deploy uses remoto/execnet to run its source code remotely
