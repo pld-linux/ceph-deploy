@@ -16,7 +16,7 @@ Patch0:		%{name}-pld.patch
 URL:		https://github.com/ceph/ceph-deploy
 BuildRequires:	python-setuptools >= 7.0
 BuildRequires:	rpm-pythonprov
-BuildRequires:	rpmbuild(macros) >= 1.219
+BuildRequires:	rpmbuild(macros) >= 1.710
 Requires:	python-remoto
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
