@@ -5,7 +5,7 @@
 Summary:	Deploy Ceph with minimal infrastructure
 Name:		ceph-deploy
 Version:	1.5.23
-Release:	1
+Release:	2
 License:	MIT
 Group:		Applications/System
 Source0:	https://github.com/ceph/ceph-deploy/archive/v%{version}/%{name}-%{version}.tar.gz
