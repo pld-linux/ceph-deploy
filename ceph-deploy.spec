@@ -3,6 +3,7 @@
 #	- rgw support
 
 Summary:	Deploy Ceph with minimal infrastructure
+Summary(pl.UTF-8):	Wdrażanie Cepha z minimalną infrastrukturą
 Name:		ceph-deploy
 Version:	1.5.23
 Release:	2
@@ -28,6 +29,14 @@ requiring no servers, databases, or anything like that.
 
 If you set up and tear down Ceph clusters a lot, and want minimal
 extra bureaucracy, this is for you.
+
+%description -l pl.UTF-8
+ceph-deploy to sposób wdrażania Cepha polegający jedynie na dostępie
+SSH do serwerów, sudo i odrobinie Pythona. Uruchamia w pełni stację
+roboczą bez wymagania serwerów, baz danych itp.
+
+Jest to rozwiązanie dla tych, którzy często stawiają i wyłączają
+klastry Cepha i chcą mieć przy tym jak najmniej biurokracji.
 
 %prep
 %setup -q
