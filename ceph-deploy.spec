@@ -40,7 +40,7 @@ klastry Cepha i chcą mieć przy tym jak najmniej biurokracji.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P0 -p1
 
 %build
 export CEPH_DEPLOY_NO_VENDOR=1
